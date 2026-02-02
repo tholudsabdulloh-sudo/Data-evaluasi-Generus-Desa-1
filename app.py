@@ -50,13 +50,20 @@ TARGET_MASTER = {
             "Mei": {"quran": "Al A'la 16 - Al Bayyinah 7", "hadist": "Jannaiz 11-30", "doa": "Doa perlindungan", "dalil": "Jujur (2 dalil)"},
             "Juni": {"quran": "Al Bayyinah 8 - Annas 6", "hadist": "Jannaiz 31-50", "doa": "Penderesan", "dalil": "Deres dalil sebelumnya"},
         },
-        "Tahun Kedua": {
-            "Juli": {"quran": "Al A'rof 88-149", "hadist": "Jannaiz 51-70", "doa": "Doa sholat tasbih", "dalil": "Berdoa (lanjutan)"},
-            "Agustus": {"quran": "Al A'rof 150-195", "hadist": "K Soum 1-10", "doa": "Doa minum air zam-zam", "dalil": "Alim Faqih (lanjutan)"},
-            "September": {"quran": "Al A'rof 196 - Al Anfal 45", "hadist": "K Soum 11-30", "doa": "Penderesan", "dalil": "Deres dalil sebelumnya"},
-            "Oktober": {"quran": "Al Anfal 46 - Attaubat 20", "hadist": "K Soum 31-50", "doa": "Doa minta naik haji", "dalil": "Akhlakul karimah (lanjutan)"},
-        }
-    },
+                "Tahun Kedua": {
+            "Juli": {"quran": "Al A'rof 88-149", "hadist": "Jannaiz 51-70", "surat": "Al-Mursalat", "doa": "Doa sholat tasbih", "dalil": "Berdoa (2 dalil)"},
+            "Agustus": {"quran": "Al A'rof 150-195", "hadist": "K. Soum 1-10", "surat": "Al-Insan", "doa": "Doa minum air zam-zam", "dalil": "Alim Faqih (2 dalil)"},
+            "September": {"quran": "Al A'rof 196 - Al Anfal 45", "hadist": "K. Soum 11-30", "surat": "Penderesan", "doa": "Penderesan", "dalil": "Deres sebelumnya"},
+            "Oktober": {"quran": "Al Anfal 46 - Attaubat 20", "hadist": "K. Soum 31-50", "surat": "Al-Qiyamah", "doa": "Doa minta naik haji", "dalil": "Akhlakul karimah (2 dalil)"},
+            "November": {"quran": "Attaubat 21-89", "hadist": "K. Soum 51-70", "surat": "Al-Mudassir", "doa": "Doa ketika ada petir", "dalil": "Mandiri (2 dalil)"},
+            "Desember": {"quran": "Attaubat 90 - Yunus 25", "hadist": "K. Soum 71-92", "surat": "Penderesan", "doa": "Penderesan", "dalil": "Deres sebelumnya"},
+            "Januari": {"quran": "Yunus 26-109", "hadist": "K. Sholat Nawafil 1-20", "surat": "Al-Muzammil", "doa": "Doa menjenguk orang sakit", "dalil": "Rukun (2 dalil)"},
+            "Februari": {"quran": "Hud 1-60", "hadist": "K. Sholat Nawafil 21-40", "surat": "Al-Jin", "doa": "Doa agar diberi keturunan", "dalil": "Kompak (2 dalil)"},
+            "Maret": {"quran": "Hud 61-123", "hadist": "K. Sholat Nawafil 41-60", "surat": "Penderesan", "doa": "Penderesan", "dalil": "Deres sebelumnya"},
+            "April": {"quran": "Yusuf 1-52", "hadist": "K. Sholat Nawafil 61-80", "surat": "Nuh", "doa": "Doa sapu jagad", "dalil": "Kerja sama baik (2 dalil)"},
+            "Mei": {"quran": "Ar-Ro'du 1-43", "hadist": "K. Sholat Nawafil 81-100", "surat": "Al-Ma'arij", "doa": "Doa berlindung dari fitnah", "dalil": "Jujur (2 dalil)"},
+            "Juni": {"quran": "Ibrahim 1-52", "hadist": "K. Sholat Nawafil 101-124", "surat": "Penderesan", "doa": "Penderesan", "dalil": "Deres sebelumnya"},
+                },
         "Kelas C": {
         "Tahun Pertama": {
             "Juli": {"quran": "Yusuf 53-111", "hadist": "Ahkam 1-22", "surat": "Al-Buruj", "doa": "Doa pr bp imam 1-7", "dalil": "Amanah (2 dalil)"},
