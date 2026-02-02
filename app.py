@@ -8,8 +8,7 @@ TARGET_MASTER = {
     "Kelas A": {
         "Tahun Pertama": {
             "Juli": {"quran": "Al Angkabut 45", "hadist": "Kitabussholah 1", "doa": "Doa nabi muhammad", "dalil": "Mengaji (2)"},
-            "Agustus": {"quran": "Arrum 25", "hadist": "Kitabussholah 19", "doa": "Doa amal jelek", "dalil": "Mengamal (2)"},
-        },
+            "Agustus": {"quran": "Arrum 25", "hadist": "Kitabussholah 19", "doa": "Doa amal jelek", "dalil": "Mengamal (2)"}
         "Tahun Kedua": {
             "Juli": {"quran": "Azzumar 32", "hadist": "Adab 66", "doa": "Doa lindung jelek anggota badan", "dalil": "Mengaji (lanjutan)"},
         }
@@ -37,7 +36,7 @@ with st.container():
 st.divider()
 
 # --- BAGIAN 2: PENILAIAN DETAIL ---
-st.subheader("📉 Evaluasi Persentase Kategori")
+st.subheader("KategoriEvaluasi")
 
 # Fungsi untuk menghitung rata-rata sub-kategori
 def calc_sub(materi, makna, ket):
@@ -71,6 +70,10 @@ with col_d:
 with col_l:
     st.markdown("#### 💡 Hafalan Dalil")
     total_l = st.number_input("Nilai Hafalan Dalil (%)", 0, 100, 0)
+with col_l:
+    st.markdown("#### 💡 Hafalan Surat")
+    total_l = st.number_input("Nilai Hafalan Dalil (%)", 0, 100, 0)
+
 
 # Skor Akhir Keseluruhan
 skor_akhir = (total_q + total_h + total_d + total_l) / 4
