@@ -152,15 +152,19 @@ col_s, col_d, col_l = st.columns(3)
 with col_s: total_s = st.number_input("Hafalan Surat (%)", 0, 100, 0)
 with col_d: total_d = st.number_input("Hafalan Doa (%)", 0, 100, 0)
 with col_l: total_l = st.number_input("Hafalan Dalil (%)", 0, 100, 0)
+    # ... (Bagian TARGET_MASTER tetap sama) ...
 
 # --- LOGIKA SIMPAN KE GOOGLE SHEETS ---
 if st.button("💾 SIMPAN DATA KE GOOGLE SHEETS", use_container_width=True):
     if nama:
         try:
-            # 1. Ambil data sedia ada
-            existing_data = conn.read(worksheet="Sheet1", ttl=0)
+            # 1. Baca data (tambahkan error handling jika sheet kosong)
+            try:
+                existing_data = conn.read(worksheet="Sheet1", ttl=0)
+            except Exception:
+                existing_data = pd.DataFrame() # Jika gagal baca, buat DF kosong
             
-            # 2. Kira purata
+            # 2. Kira rata-rata
             avg = (total_q + total_h + total_s + total_d + total_l) / 5
             
             # 3. Baris data baru
@@ -178,20 +182,27 @@ if st.button("💾 SIMPAN DATA KE GOOGLE SHEETS", use_container_width=True):
                 "Rata-rata": f"{avg:.1f}%"
             }])
             
-            # 4. Gabung dan kemas kini
-            updated_df = pd.concat([existing_data, new_row], ignore_index=True)
+            # 4. Gabung data (Pastikan header konsisten)
+            if existing_data.empty:
+                updated_df = new_row
+            else:
+                updated_df = pd.concat([existing_data, new_row], ignore_index=True)
+            
+            # 5. Tulis kembali
             conn.update(worksheet="Sheet1", data=updated_df)
             
-            # Simpan juga ke session_state untuk paparan rekap sementara
+            # Update session state
             if "rekap" not in st.session_state: st.session_state.rekap = []
             st.session_state.rekap.append(new_row.to_dict('records')[0])
             
-            st.success(f"Alhamdulillah! Data {nama} ({kelompok}) berjaya disimpan.")
+            st.success(f"Alhamdulillah! Data {nama} berhasil masuk ke Google Sheets.")
             st.balloons()
+            
         except Exception as e:
-            st.error(f"Gagal simpan: {e}")
+            st.error(f"⚠️ Error: {str(e)}")
+            st.info("Pastikan link di Secrets benar dan akses Google Sheets sudah diubah menjadi 'Editor'.")
     else:
-        st.warning("Sila isi Nama Lengkap terlebih dahulu!")
+        st.warning("Silakan isi Nama Lengkap terlebih dahulu!")
 
 # --- PAPARAN REKAP ---
 st.divider()
