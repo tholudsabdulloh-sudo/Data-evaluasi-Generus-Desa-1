@@ -3,96 +3,97 @@ import pandas as pd
 
 st.set_page_config(page_title="Data Generus Desa 1", layout="wide")
 
-# --- DATA TARGET (Sesuai Kurikulum Foto) ---
+# --- DATABASE TARGET LENGKAP (Tahun 1 & 2, Semua Kelas) ---
 TARGET_MASTER = {
     "Kelas A": {
         "Tahun Pertama": {
-            "Juli": {"quran": "Al Angkabut 45", "hadist": "Kitabussholah 1", "doa": "Doa nabi muhammad", "dalil": "Mengaji (2)"},
-            "Agustus": {"quran": "Arrum 25", "hadist": "Kitabussholah 19", "doa": "Doa amal jelek", "dalil": "Mengamal (2)"}
+            "Juli": {"quran": "Al Angkabut 45-Arrum 24", "hadist": "Kitabussholah 1-18", "surat": "An-Nas s/d Al-Kafirun", "doa": "Doa kumpulan nabi muhammad", "dalil": "Mengaji (2)"},
+            "Agustus": {"quran": "Arrum 25-Luqman 11", "hadist": "Kitabussholah 19-36", "surat": "Al-Kausar s/d Al-Fil", "doa": "Doa berlindung amal jelek", "dalil": "Mengamal (2)"},
+            "September": {"quran": "Luqman 12-Assajadah 20", "hadist": "Kitabussholah 37-54", "surat": "Al-Humazah s/d Al-Adiyat", "doa": "Penderesan", "dalil": "Deres sebelumnya"},
+            "Oktober": {"quran": "Assajadah 21-Al Ahzab 30", "hadist": "Kitabussholah 55-72", "surat": "Al-Qori'ah s/d Az-Zalzalah", "doa": "Doa lindung dari 4 hal", "dalil": "Membela (2)"},
+            "November": {"quran": "Al Ahzab 31-62", "hadist": "Kitabussholah 73-90", "surat": "Al-Bayyinah s/d Al-Qodr", "doa": "Doa lindung dari syirik", "dalil": "Jamaah (2)"},
+            "Desember": {"quran": "Al Ahzab 63-Saba' 31", "hadist": "Kitabussholah 91-108", "surat": "Al-Alaq s/d At-Tin", "doa": "Penderesan", "dalil": "Deres sebelumnya"},
+        },
         "Tahun Kedua": {
-            "Juli": {"quran": "Azzumar 32", "hadist": "Adab 66", "doa": "Doa lindung jelek anggota badan", "dalil": "Mengaji (lanjutan)"},
+            "Juli": {"quran": "Azzumar 32-74", "hadist": "Adab 66-83", "surat": "Al-Insyirah s/d Ad-Duha", "doa": "Doa lindung jelek anggota badan", "dalil": "Deres (4)"},
+            "Agustus": {"quran": "Azzumar 75-Gofir 40", "hadist": "Adab 84-100", "surat": "Al-Lail s/d Asy-Syams", "doa": "Doa masuk pasar", "dalil": "Deres (4)"},
+        }
+    },
+    "Kelas B": {
+        "Tahun Pertama": {
+            "Juli": {"quran": "Addariyat 31-Al Qomar 6", "hadist": "Adillah 1-20", "surat": "At-Toriq", "doa": "Doa tempat baru", "dalil": "Berdoa (2)"},
+        }
+    },
+    "Kelas C": {
+        "Tahun Pertama": {
+            "Juli": {"quran": "Yusuf 53-111", "hadist": "Ahkam 1-22", "surat": "Al-Buruj", "doa": "Doa pr bp imam 1-7", "dalil": "Amanah (2)"},
         }
     }
-    # Tambahkan data lainnya sesuai pola di atas
 }
 
-st.title("📊 Sistem Evaluasi Detail Generus")
+st.title("📊 Sistem Evaluasi Full Kurikulum Generus")
 
-# --- BAGIAN 1: IDENTITAS & TARGET ---
-with st.container():
-    c1, c2 = st.columns(2)
-    with c1:
-        nama = st.text_input("Nama Lengkap")
-        kls = st.selectbox("Pilih Kelas", ["Kelas A", "Kelas B", "Kelas C"])
-        thn = st.radio("Pilih Tahun", ["Tahun Pertama", "Tahun Kedua"], horizontal=True)
-        bln = st.selectbox("Bulan", ["Juli", "Agustus", "September", "Oktober", "November", "Desember", "Januari", "Februari", "Maret", "April", "Mei", "Juni"])
-    
-    with c2:
-        target = TARGET_MASTER.get(kls, {}).get(thn, {}).get(bln, {"quran": "-", "hadist": "-", "doa": "-", "dalil": "-"})
-        st.info(f"🎯 **Target {bln} ({thn}):**")
-        st.write(f"📖 **Quran:** {target['quran']} | 📜 **Hadist:** {target['hadist']}")
-        st.write(f"🙏 **Doa:** {target['doa']} | 💡 **Dalil:** {target['dalil']}")
+# --- IDENTITAS & TARGET ---
+with st.sidebar:
+    st.header("👤 Data Input")
+    nama = st.text_input("Nama Lengkap")
+    kls = st.selectbox("Pilih Kelas", ["Kelas A", "Kelas B", "Kelas C"])
+    thn = st.radio("Pilih Tahun", ["Tahun Pertama", "Tahun Kedua"])
+    bln = st.selectbox("Pilih Bulan", ["Juli", "Agustus", "September", "Oktober", "November", "Desember", "Januari", "Februari", "Maret", "April", "Mei", "Juni"])
+
+# Menampilkan Target Otomatis
+target = TARGET_MASTER.get(kls, {}).get(thn, {}).get(bln, {"quran": "-", "hadist": "-", "surat": "-", "doa": "-", "dalil": "-"})
+
+st.info(f"🎯 **Target {bln} ({thn}) untuk {kls}:**")
+t_col1, t_col2 = st.columns(2)
+with t_col1:
+    st.write(f"📖 **Quran:** {target['quran']}")
+    st.write(f"📜 **Hadist:** {target['hadist']}")
+    st.write(f"🕋 **Surat:** {target['surat']}")
+with t_col2:
+    st.write(f"🙏 **Doa:** {target['doa']}")
+    st.write(f"💡 **Dalil:** {target['dalil']}")
 
 st.divider()
 
-# --- BAGIAN 2: PENILAIAN DETAIL ---
-st.subheader("KategoriEvaluasi")
+# --- PENILAIAN ---
+st.subheader("📉 Detail Penilaian Persentase (%)")
 
-# Fungsi untuk menghitung rata-rata sub-kategori
-def calc_sub(materi, makna, ket):
-    return (materi + makna + ket) / 3
+def input_materi_detail(label, key_p):
+    with st.expander(f"Penilaian {label}", expanded=True):
+        c1, c2, c3 = st.columns(3)
+        with c1: m = st.number_input(f"Materi (%)", 0, 100, 0, key=f"{key_p}m")
+        with c2: n = st.number_input(f"Makna (%)", 0, 100, 0, key=f"{key_p}n")
+        with c3: k = st.number_input(f"Ket (%)", 0, 100, 0, key=f"{key_p}k")
+    return (m + n + k) / 3
 
+# Baris 1: Quran & Hadist (3 Kategori)
 col_q, col_h = st.columns(2)
+with col_q: total_q = input_materi_detail("Al-Quran", "q")
+with col_h: total_h = input_materi_detail("Al-Hadist", "h")
 
-with col_q:
-    st.markdown("#### 📖 Makna Al-Quran")
-    q_mat = st.number_input("Materi Quran (%)", 0, 100, 0, key="q1")
-    q_mak = st.number_input("Makna Quran (%)", 0, 100, 0, key="q2")
-    q_ket = st.number_input("Keterangan Quran (%)", 0, 100, 0, key="q3")
-    total_q = calc_sub(q_mat, q_mak, q_ket)
-    st.write(f"**Hasil Akhir Quran: {total_q:.1f}%**")
+# Baris 2: Surat, Doa, Dalil (1 Kategori)
+st.markdown("#### Penilaian Hafalan")
+col_s, col_d, col_l = st.columns(3)
+with col_s: total_s = st.number_input("Hafalan Surat (%)", 0, 100, 0)
+with col_d: total_d = st.number_input("Hafalan Doa (%)", 0, 100, 0)
+with col_l: total_l = st.number_input("Hafalan Dalil (%)", 0, 100, 0)
 
-with col_h:
-    st.markdown("#### 📜 Makna Al-Hadist")
-    h_mat = st.number_input("Materi Hadist (%)", 0, 100, 0, key="h1")
-    h_mak = st.number_input("Makna Hadist (%)", 0, 100, 0, key="h2")
-    h_ket = st.number_input("Keterangan Hadist (%)", 0, 100, 0, key="h3")
-    total_h = calc_sub(h_mat, h_mak, h_ket)
-    st.write(f"**Hasil Akhir Hadist: {total_h:.1f}%**")
-
-st.markdown("---")
-col_d, col_l = st.columns(2)
-
-with col_d:
-    st.markdown("#### 🙏 Hafalan Doa")
-    total_d = st.number_input("Nilai Hafalan Doa (%)", 0, 100, 0)
-
-with col_l:
-    st.markdown("#### 💡 Hafalan Dalil")
-    total_l = st.number_input("Nilai Hafalan Dalil (%)", 0, 100, 0)
-with col_l:
-    st.markdown("#### 💡 Hafalan Surat")
-    total_l = st.number_input("Nilai Hafalan Dalil (%)", 0, 100, 0)
-
-
-# Skor Akhir Keseluruhan
-skor_akhir = (total_q + total_h + total_d + total_l) / 4
-
-if st.button("💾 SIMPAN DATA EVALUASI"):
+# Simpan
+if st.button("💾 SIMPAN DATA EVALUASI", use_container_width=True):
     if nama:
-        if "db_permanen" not in st.session_state: st.session_state.db_permanen = []
-        st.session_state.db_permanen.append({
-            "Nama": nama, "Kelas": kls, "Bulan": bln,
+        if "rekap" not in st.session_state: st.session_state.rekap = []
+        avg = (total_q + total_h + total_s + total_d + total_l) / 5
+        st.session_state.rekap.append({
+            "Nama": nama, "Kelas": kls, "Tahun": thn, "Bulan": bln,
             "Quran": f"{total_q:.1f}%", "Hadist": f"{total_h:.1f}%",
-            "Doa": f"{total_d}%", "Dalil": f"{total_l}%",
-            "Total": f"{skor_akhir:.1f}%"
+            "Surat": f"{total_s}%", "Doa": f"{total_d}%", "Dalil": f"{total_l}%",
+            "Rata-rata": f"{avg:.1f}%"
         })
-        st.success(f"Evaluasi {nama} berhasil dicatat!")
-    else:
-        st.error("Nama harus diisi!")
+        st.success(f"Data {nama} berhasil disimpan!")
 
-# --- BAGIAN 3: TABEL REKAP ---
+# --- REKAP TABEL ---
 st.divider()
-if "db_permanen" in st.session_state and st.session_state.db_permanen:
-    st.write("### 📋 Rekap Hasil")
-    st.dataframe(pd.DataFrame(st.session_state.db_permanen), use_container_width=True)
+if "rekap" in st.session_state:
+    st.subheader("📋 Rekapitulasi Nilai")
+    st.dataframe(pd.DataFrame(st.session_state.rekap), use_container_width=True)
