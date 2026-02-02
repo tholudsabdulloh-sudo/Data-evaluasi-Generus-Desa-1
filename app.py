@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Data Generus Desa 1", layout="wide")
 
@@ -99,47 +100,24 @@ TARGET_MASTER = {
 
 st.title("📊 Sistem Evaluasi Kurikulum Generus")
 
-# --- IDENTITAS & TARGET (Update di bagian Sidebar) ---
+# --- KONEKSI GOOGLE SHEETS ---
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+# --- SIDEBAR: IDENTITAS & TARGET ---
 with st.sidebar:
     st.header("👤 Data Input")
     nama = st.text_input("Nama Lengkap")
     
-    # Update daftar kelompok sesuai permintaan
+    # Pilihan kelompok sesuai permintaan
     kelompok = st.selectbox("Pilih Kelompok", [
-        "LA 1", 
-        "LA 2", 
-        "C 1", 
-        "C 2", 
-        "C 3", 
-        "RT 7", 
-        "D 1"
+        "LA 1", "LA 2", "C 1", "C 2", "C 3", "RT 7", "D 1"
     ])
     
     kls = st.selectbox("Pilih Kelas", ["Kelas A", "Kelas B", "Kelas C"])
     thn = st.radio("Pilih Tahun", ["Tahun Pertama", "Tahun Kedua"])
     bln = st.selectbox("Pilih Bulan", ["Juli", "Agustus", "September", "Oktober", "November", "Desember", "Januari", "Februari", "Maret", "April", "Mei", "Juni"])
 
-# --- BAGIAN LOGIKA SIMPAN (Update di bagian button) ---
-if st.button("💾 SIMPAN DATA EVALUASI", use_container_width=True):
-    if nama:
-        if "rekap" not in st.session_state: st.session_state.rekap = []
-        avg = (total_q + total_h + total_s + total_d + total_l) / 5
-        st.session_state.rekap.append({
-            "Nama": nama, 
-            "Kelompok": kelompok, # Tercatat sesuai pilihan LA 1 - D 1
-            "Kelas": kls, 
-            "Tahun": thn, 
-            "Bulan": bln,
-            "Quran": f"{total_q:.1f}%", 
-            "Hadist": f"{total_h:.1f}%",
-            "Surat": f"{total_s}%", 
-            "Doa": f"{total_d}%", 
-            "Dalil": f"{total_l}%",
-            "Rata-rata": f"{avg:.1f}%"
-        })
-        st.success(f"Data {nama} ({kelompok}) berhasil disimpan!")
-
-# Menampilkan Target Otomatis
+# Menampilkan Target Otomatis berdasarkan pilihan sidebar
 target = TARGET_MASTER.get(kls, {}).get(thn, {}).get(bln, {"quran": "-", "hadist": "-", "surat": "-", "doa": "-", "dalil": "-"})
 
 st.info(f"🎯 **Target {bln} ({thn}) untuk {kls}:**")
@@ -165,38 +143,27 @@ def input_materi_detail(label, key_p):
         with c3: k = st.number_input(f"Ket (%)", 0, 100, 0, key=f"{key_p}k")
     return (m + n + k) / 3
 
-# Baris 1: Quran & Hadist (3 Kategori)
 col_q, col_h = st.columns(2)
 with col_q: total_q = input_materi_detail("Al-Quran", "q")
 with col_h: total_h = input_materi_detail("Al-Hadist", "h")
 
-# Baris 2: Surat, Doa, Dalil (1 Kategori)
 st.markdown("#### Penilaian Hafalan")
 col_s, col_d, col_l = st.columns(3)
 with col_s: total_s = st.number_input("Hafalan Surat (%)", 0, 100, 0)
 with col_d: total_d = st.number_input("Hafalan Doa (%)", 0, 100, 0)
 with col_l: total_l = st.number_input("Hafalan Dalil (%)", 0, 100, 0)
-    import streamlit as st
-import pandas as pd
-from streamlit_gsheets import GSheetsConnection
 
-# ... (Bagian TARGET_MASTER dan Input Sidebar tetap sama seperti sebelumnya) ...
-
-# Inisialisasi Koneksi ke Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
-
-# Tombol Simpan
+# --- LOGIKA SIMPAN KE GOOGLE SHEETS ---
 if st.button("💾 SIMPAN DATA KE GOOGLE SHEETS", use_container_width=True):
     if nama:
         try:
-            # 1. Baca data yang sudah ada di sheet
-            # Kita asumsikan data ada di "Sheet1"
-            existing_data = conn.read(worksheet="Sheet1", ttl=0) # ttl=0 agar data selalu terbaru
+            # 1. Ambil data sedia ada
+            existing_data = conn.read(worksheet="Sheet1", ttl=0)
             
-            # 2. Hitung rata-rata
+            # 2. Kira purata
             avg = (total_q + total_h + total_s + total_d + total_l) / 5
             
-            # 3. Buat baris data baru dalam bentuk DataFrame
+            # 3. Baris data baru
             new_row = pd.DataFrame([{
                 "Nama": nama,
                 "Kelompok": kelompok,
@@ -211,23 +178,23 @@ if st.button("💾 SIMPAN DATA KE GOOGLE SHEETS", use_container_width=True):
                 "Rata-rata": f"{avg:.1f}%"
             }])
             
-            # 4. Gabungkan data lama dengan data baru
+            # 4. Gabung dan kemas kini
             updated_df = pd.concat([existing_data, new_row], ignore_index=True)
-            
-            # 5. Tulis kembali ke Google Sheets
             conn.update(worksheet="Sheet1", data=updated_df)
             
-            st.success(f"Alhamdulillah! Data {nama} berhasil masuk ke Google Sheets.")
-            st.balloons()
+            # Simpan juga ke session_state untuk paparan rekap sementara
+            if "rekap" not in st.session_state: st.session_state.rekap = []
+            st.session_state.rekap.append(new_row.to_dict('records')[0])
             
+            st.success(f"Alhamdulillah! Data {nama} ({kelompok}) berjaya disimpan.")
+            st.balloons()
         except Exception as e:
-            st.error(f"Gagal menyimpan data: {e}")
-            st.info("Pastikan Anda sudah mengatur 'Secrets' di dashboard Streamlit.")
+            st.error(f"Gagal simpan: {e}")
     else:
-        st.warning("Silakan isi Nama Lengkap terlebih dahulu!")
+        st.warning("Sila isi Nama Lengkap terlebih dahulu!")
 
-# --- REKAP TABEL ---
+# --- PAPARAN REKAP ---
 st.divider()
-if "rekap" in st.session_state:
-    st.subheader("📋 Rekapitulasi Nilai")
+if "rekap" in st.session_state and st.session_state.rekap:
+    st.subheader("📋 Rekapitulasi Nilai (Sesi Ini)")
     st.dataframe(pd.DataFrame(st.session_state.rekap), use_container_width=True)
