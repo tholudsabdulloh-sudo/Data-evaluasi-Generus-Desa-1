@@ -99,9 +99,6 @@ TARGET_MASTER = {
 
 st.title("📊 Sistem Evaluasi Kurikulum Generus")
 
-# --- KONEKSI GOOGLE SHEETS ---
-conn = st.connection("gsheets", type=GSheetsConnection)
-
 # --- SIDEBAR: IDENTITAS & TARGET ---
 with st.sidebar:
     st.header("👤 Data Input")
