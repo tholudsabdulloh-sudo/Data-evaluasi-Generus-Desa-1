@@ -154,12 +154,6 @@ with col_l: total_l = st.number_input("Hafalan Dalil (%)", 0, 100, 0)
 if st.button("💾 SIMPAN DATA KE GOOGLE SHEETS", use_container_width=True):
     if nama:
         try:
-            # 1. Baca data (tambahkan error handling jika sheet kosong)
-            try:
-                existing_data = conn.read(worksheet="Sheet1", ttl=0)
-            except Exception:
-                existing_data = pd.DataFrame() # Jika gagal baca, buat DF kosong
-            
             # 2. Kira rata-rata
             avg = (total_q + total_h + total_s + total_d + total_l) / 5
             
