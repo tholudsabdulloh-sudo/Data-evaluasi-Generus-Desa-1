@@ -1,3 +1,3 @@
 streamlit
 pandas
-GSheetsConnection
+import GSheetsConnection
