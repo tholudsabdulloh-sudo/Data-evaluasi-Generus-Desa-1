@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 
 st.set_page_config(page_title="Data Generus Desa 1", layout="wide")
 
@@ -97,6 +98,12 @@ TARGET_MASTER = {
     }
 }
 
+# Initialize session state
+if "rekap" not in st.session_state:
+    st.session_state.rekap = []
+if "data_csv" not in st.session_state:
+    st.session_state.data_csv = pd.DataFrame()
+
 st.title("📊 Sistem Evaluasi Kurikulum Generus")
 
 # --- SIDEBAR: IDENTITAS & TARGET ---
@@ -112,6 +119,10 @@ with st.sidebar:
     kls = st.selectbox("Pilih Kelas", ["Kelas A", "Kelas B", "Kelas C"])
     thn = st.radio("Pilih Tahun", ["Tahun Pertama", "Tahun Kedua"])
     bln = st.selectbox("Pilih Bulan", ["Juli", "Agustus", "September", "Oktober", "November", "Desember", "Januari", "Februari", "Maret", "April", "Mei", "Juni"])
+    
+    st.divider()
+    st.markdown("**Opsi Simpan Data:**")
+    simpan_option = st.radio("Pilih metode penyimpanan:", ["CSV File", "Session Only"])
 
 # Menampilkan Target Otomatis berdasarkan pilihan sidebar
 target = TARGET_MASTER.get(kls, {}).get(thn, {}).get(bln, {"quran": "-", "hadist": "-", "surat": "-", "doa": "-", "dalil": "-"})
@@ -133,32 +144,54 @@ st.subheader("📉 Detail Penilaian Persentase (%)")
 
 def input_materi_detail(label, key_p):
     with st.expander(f"Penilaian {label}", expanded=True):
+        st.caption(f"Target: {target.get(label.lower(), 'Tidak ada target')}")
         c1, c2, c3 = st.columns(3)
-        with c1: m = st.number_input(f"Materi (%)", 0, 100, 0, key=f"{key_p}m")
-        with c2: n = st.number_input(f"Makna (%)", 0, 100, 0, key=f"{key_p}n")
-        with c3: k = st.number_input(f"Ket (%)", 0, 100, 0, key=f"{key_p}k")
-    return (m + n + k) / 3
+        with c1: 
+            m = st.number_input(f"Materi (%)", 0, 100, 0, key=f"{key_p}m")
+        with c2: 
+            n = st.number_input(f"Makna (%)", 0, 100, 0, key=f"{key_p}n")
+        with c3: 
+            k = st.number_input(f"Ket (%)", 0, 100, 0, key=f"{key_p}k")
+        
+        # Tampilkan rata-rata per materi
+        avg_materi = (m + n + k) / 3
+        st.progress(avg_materi/100, text=f"Rata-rata {label}: {avg_materi:.1f}%")
+    return avg_materi
 
 col_q, col_h = st.columns(2)
-with col_q: total_q = input_materi_detail("Al-Quran", "q")
-with col_h: total_h = input_materi_detail("Al-Hadist", "h")
+with col_q: 
+    total_q = input_materi_detail("Al-Quran", "q")
+with col_h: 
+    total_h = input_materi_detail("Al-Hadist", "h")
 
 st.markdown("#### Penilaian Hafalan")
 col_s, col_d, col_l = st.columns(3)
-with col_s: total_s = st.number_input("Hafalan Surat (%)", 0, 100, 0)
-with col_d: total_d = st.number_input("Hafalan Doa (%)", 0, 100, 0)
-with col_l: total_l = st.number_input("Hafalan Dalil (%)", 0, 100, 0)
-    # ... (Bagian TARGET_MASTER tetap sama) ...
+with col_s: 
+    total_s = st.number_input("Hafalan Surat (%)", 0, 100, 0)
+    st.caption(f"Target: {target['surat']}")
+with col_d: 
+    total_d = st.number_input("Hafalan Doa (%)", 0, 100, 0)
+    st.caption(f"Target: {target['doa']}")
+with col_l: 
+    total_l = st.number_input("Hafalan Dalil (%)", 0, 100, 0)
+    st.caption(f"Target: {target['dalil']}")
 
-# --- LOGIKA SIMPAN KE GOOGLE SHEETS ---
-if st.button("💾 SIMPAN DATA KE GOOGLE SHEETS", use_container_width=True):
+# Tampilkan progress total
+st.divider()
+avg_total = (total_q + total_h + total_s + total_d + total_l) / 5
+st.subheader(f"📊 Rata-rata Total: {avg_total:.1f}%")
+st.progress(avg_total/100)
+
+# --- LOGIKA SIMPAN DATA ---
+if st.button("💾 SIMPAN DATA", use_container_width=True):
     if nama:
         try:
-            # 2. Kira rata-rata
-            avg = (total_q + total_h + total_s + total_d + total_l) / 5
+            # Buat timestamp
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
-            # 3. Baris data baru
-            new_row = pd.DataFrame([{
+            # Data baru
+            new_data = {
+                "Timestamp": timestamp,
                 "Nama": nama,
                 "Kelompok": kelompok,
                 "Kelas": kls,
@@ -169,33 +202,92 @@ if st.button("💾 SIMPAN DATA KE GOOGLE SHEETS", use_container_width=True):
                 "Surat": f"{total_s}%",
                 "Doa": f"{total_d}%",
                 "Dalil": f"{total_l}%",
-                "Rata-rata": f"{avg:.1f}%"
-            }])
+                "Rata-rata": f"{avg_total:.1f}%",
+                "Target_Quran": target['quran'],
+                "Target_Hadist": target['hadist'],
+                "Target_Surat": target['surat'],
+                "Target_Doa": target['doa'],
+                "Target_Dalil": target['dalil']
+            }
             
-            # 4. Gabung data (Pastikan header konsisten)
-            if existing_data.empty:
-                updated_df = new_row
-            else:
-                updated_df = pd.concat([existing_data, new_row], ignore_index=True)
+            # Tambah ke session state
+            st.session_state.rekap.append(new_data)
             
-            # 5. Tulis kembali
-            conn.update(worksheet="Sheet1", data=updated_df)
+            # Tambah ke DataFrame CSV jika opsi dipilih
+            if simpan_option == "CSV File":
+                new_df = pd.DataFrame([new_data])
+                if st.session_state.data_csv.empty:
+                    st.session_state.data_csv = new_df
+                else:
+                    st.session_state.data_csv = pd.concat([st.session_state.data_csv, new_df], ignore_index=True)
             
-            # Update session state
-            if "rekap" not in st.session_state: st.session_state.rekap = []
-            st.session_state.rekap.append(new_row.to_dict('records')[0])
-            
-            st.success(f"Alhamdulillah! Data {nama} berhasil masuk ke Google Sheets.")
+            st.success(f"Alhamdulillah! Data {nama} berhasil disimpan.")
             st.balloons()
+            
+            # Reset form setelah simpan
+            st.rerun()
             
         except Exception as e:
             st.error(f"⚠️ Error: {str(e)}")
-            st.info("Pastikan link di Secrets benar dan akses Google Sheets sudah diubah menjadi 'Editor'.")
     else:
         st.warning("Silakan isi Nama Lengkap terlebih dahulu!")
 
+# --- DOWNLOAD CSV ---
+if not st.session_state.data_csv.empty:
+    st.divider()
+    st.subheader("📥 Download Data")
+    csv = st.session_state.data_csv.to_csv(index=False).encode('utf-8')
+    
+    st.download_button(
+        label="📄 Download Data sebagai CSV",
+        data=csv,
+        file_name=f"evaluasi_generus_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
 # --- PAPARAN REKAP ---
 st.divider()
-if "rekap" in st.session_state and st.session_state.rekap:
+if st.session_state.rekap:
     st.subheader("📋 Rekapitulasi Nilai (Sesi Ini)")
-    st.dataframe(pd.DataFrame(st.session_state.rekap), use_container_width=True)
+    rekap_df = pd.DataFrame(st.session_state.rekap)
+    
+    # Pilih kolom untuk ditampilkan
+    display_cols = ["Timestamp", "Nama", "Kelompok", "Kelas", "Tahun", "Bulan", 
+                   "Quran", "Hadist", "Surat", "Doa", "Dalil", "Rata-rata"]
+    
+    # Filter kolom yang ada di DataFrame
+    display_cols = [col for col in display_cols if col in rekap_df.columns]
+    
+    st.dataframe(rekap_df[display_cols], use_container_width=True)
+    
+    # Tampilkan statistik sederhana
+    st.subheader("📈 Statistik Sesi Ini")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Jumlah Data", len(st.session_state.rekap))
+    with col2:
+        rata_rata_nilai = rekap_df['Rata-rata'].str.replace('%', '').astype(float).mean()
+        st.metric("Rata-rata Nilai", f"{rata_rata_nilai:.1f}%")
+    with col3:
+        # Hitung jumlah unik nama
+        unique_names = rekap_df['Nama'].nunique()
+        st.metric("Jumlah Santri", unique_names)
+
+# --- INSTRUKSI PENGGUNAAN ---
+with st.expander("ℹ️ Cara Menggunakan Aplikasi"):
+    st.markdown("""
+    1. **Isi Data Santri** di sidebar (Nama, Kelompok, Kelas, Tahun, Bulan)
+    2. **Target pembelajaran** akan otomatis muncul berdasarkan pilihan
+    3. **Isi nilai** untuk setiap komponen (Quran, Hadist, Surat, Doa, Dalil)
+    4. **Klik 'SIMPAN DATA'** untuk menyimpan hasil evaluasi
+    5. **Pilih metode penyimpanan**:
+        - **CSV File**: Data dapat didownload sebagai file CSV
+        - **Session Only**: Data hanya tersimpan selama sesi browser terbuka
+    6. **Lihat rekapitulasi** di bagian bawah untuk data yang sudah disimpan
+    7. **Download data** sebagai CSV untuk backup atau analisis lebih lanjut
+    """)
+
+# --- FOOTER ---
+st.divider()
+st.caption("© Sistem Evaluasi Kurikulum Generus - Developed with ❤️")
