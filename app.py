@@ -4,6 +4,7 @@ from datetime import datetime
 
 st.set_page_config(page_title="Data Generus Desa 1", layout="wide")
 
+# -------------------------------------------------------------------
 # --- DATABASE TARGET LENGKAP ---
 TARGET_MASTER = {
     "Kelas A": {
@@ -98,36 +99,104 @@ TARGET_MASTER = {
     }
 }
 
-# Initialize session state
+# 2. DATABASE SISWA TETAP (hasil ekstraksi dari file Excel)
+# -------------------------------------------------------------------
+SISWA_MASTER = {
+    "Kelas A": {
+        "LA1": ["KURNIAWAN", "FERDIAN", "VELA", "ZAHRA"],
+        "LA2": ["DIKA", "FEBI", "RENGGA"],
+        "C1": ["MAYA", "KAILA", "PANDU", "PUTRI"],
+        "C2": ["FAHRI", "RIFKI", "DAVA", "DIVA", "VIRA", "MAICA", "MILA", "ANGGRAINI", "SERLI", "GEA"],
+        "C3": ["ELVI", "NITA", "VERLIN", "SALSA", "DANI", "FITRAH", "SATRIA"],
+        "D1": ["ANDIN", "AULIA"],
+        "RT7": []  # Kelas A tidak memiliki anggota RT7
+    },
+    "Kelas B": {
+        "LA1": ["KHOLIL", "QORI", "AIS", "DESTI"],
+        "LA2": ["HELLEN", "INTAN", "ASTRI"],
+        "C2": ["RIKO", "AZZAM", "RAFI"],
+        "C3": ["NINGRUN", "IZZA", "RETNO", "FAIZ", "PUTRA"],
+        "RT7": ["NITA", "AMEL", "DEVI", "MILA"],
+        "C1": [], "D1": []
+    },
+    "Kelas C": {
+        "LA1": ["UBET", "ZUNAN", "DIRGA", "CHANDRA", "ANGGUN", "WINDA", "BUNGA", "CANDRA", "TEGUH"],
+        "LA2": ["HERMAN ZIDAN", "M EKA R"],
+        "C1": ["FAIZ", "ZAHRA", "RINTO", "FAQIH", "RITA"],
+        "C2": ["RIKO", "DINDA", "RAFI", "ADEL", "SILVI", "DANI", "AZAM"],
+        "C3": ["YULIUS", "LUSI", "DINDA", "USMAN", "JOKO", "RIZKO", "USMAN SAPUTRA"],
+        "D1": ["VINA", "DEVI"],
+        "RT7": ["NISA", "AZKA", "ANANG", "MAYA", "ARUM", "MADA", "ALEX"]
+    }
+}
+
+# -------------------------------------------------------------------
+# 3. INISIALISASI SESSION STATE
+# -------------------------------------------------------------------
 if "rekap" not in st.session_state:
     st.session_state.rekap = []
 if "data_csv" not in st.session_state:
     st.session_state.data_csv = pd.DataFrame()
 
 st.title("📊 Sistem Evaluasi Kurikulum Generus")
+st.markdown("**Dengan Database Santri Tetap**")
 
-# --- SIDEBAR: IDENTITAS & TARGET ---
+# -------------------------------------------------------------------
+# 4. SIDEBAR : IDENTITAS SANTRI (pilihan berdasarkan data master)
+# -------------------------------------------------------------------
 with st.sidebar:
-    st.header("👤 Data Input")
-    nama = st.text_input("Nama Lengkap")
-    
-    # Pilihan kelompok sesuai permintaan
-    kelompok = st.selectbox("Pilih Kelompok", [
+    st.header("👤 Identitas Santri")
+
+    # Pilihan Kelas
+    kls = st.selectbox("Pilih Kelas", ["Kelas A", "Kelas B", "Kelas C"])
+
+    # Pilihan Kelompok (tampilan user friendly)
+    kelompok_display = st.selectbox("Pilih Kelompok", [
         "LA 1", "LA 2", "C 1", "C 2", "C 3", "RT 7", "D 1"
     ])
-    
-    kls = st.selectbox("Pilih Kelas", ["Kelas A", "Kelas B", "Kelas C"])
+
+    # Mapping ke kode internal (tanpa spasi, sesuai kunci di SISWA_MASTER)
+    kelompok_map = {
+        "LA 1": "LA1",
+        "LA 2": "LA2",
+        "C 1": "C1",
+        "C 2": "C2",
+        "C 3": "C3",
+        "RT 7": "RT7",
+        "D 1": "D1"
+    }
+    kelompok = kelompok_map[kelompok_display]
+
+    # Ambil daftar nama dari database
+    daftar_nama = SISWA_MASTER.get(kls, {}).get(kelompok, [])
+
+    if daftar_nama:
+        # Jika ada data, tampilkan dropdown
+        nama = st.selectbox("Nama Santri", [""] + sorted(daftar_nama))
+    else:
+        # Jika kelompok tidak memiliki data (misal RT7 di kelas A), beri opsi manual
+        st.warning(f"Tidak ada data siswa untuk {kelompok_display} di {kls}. Silakan isi manual.")
+        nama = st.text_input("Nama Santri (manual)")
+
+    # Pilihan Tahun dan Bulan
     thn = st.radio("Pilih Tahun", ["Tahun Pertama", "Tahun Kedua"])
-    bln = st.selectbox("Pilih Bulan", ["Juli", "Agustus", "September", "Oktober", "November", "Desember", "Januari", "Februari", "Maret", "April", "Mei", "Juni"])
-    
+    bln = st.selectbox("Pilih Bulan", [
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni"
+    ])
+
     st.divider()
-    st.markdown("**Opsi Simpan Data:**")
-    simpan_option = st.radio("Pilih metode penyimpanan:", ["CSV File", "Session Only"])
+    st.markdown("**Opsi Penyimpanan:**")
+    simpan_option = st.radio("Metode simpan:", ["CSV File", "Session Only"])
 
-# Menampilkan Target Otomatis berdasarkan pilihan sidebar
-target = TARGET_MASTER.get(kls, {}).get(thn, {}).get(bln, {"quran": "-", "hadist": "-", "surat": "-", "doa": "-", "dalil": "-"})
+# -------------------------------------------------------------------
+# 5. TAMPILKAN TARGET BERDASARKAN KELAS, TAHUN, BULAN
+# -------------------------------------------------------------------
+target = TARGET_MASTER.get(kls, {}).get(thn, {}).get(bln, {
+    "quran": "-", "hadist": "-", "surat": "-", "doa": "-", "dalil": "-"
+})
 
-st.info(f"🎯 **Target {bln} ({thn}) untuk {kls}:**")
+st.info(f"🎯 **Target {bln} ({thn}) untuk {kls}**")
 t_col1, t_col2 = st.columns(2)
 with t_col1:
     st.write(f"📖 **Quran:** {target['quran']}")
@@ -139,61 +208,63 @@ with t_col2:
 
 st.divider()
 
-# --- PENILAIAN ---
-st.subheader("📉 Detail Penilaian Persentase (%)")
+# -------------------------------------------------------------------
+# 6. FORM PENILAIAN (gunakan st.form untuk menghindari rerun tiap interaksi)
+# -------------------------------------------------------------------
+with st.form("form_penilaian"):
+    st.subheader("📉 Detail Penilaian Persentase (%)")
 
-def input_materi_detail(label, key_p):
-    with st.expander(f"Penilaian {label}", expanded=True):
-        st.caption(f"Target: {target.get(label.lower(), 'Tidak ada target')}")
-        c1, c2, c3 = st.columns(3)
-        with c1: 
-            m = st.number_input(f"Materi (%)", 0, 100, 0, key=f"{key_p}m")
-        with c2: 
-            n = st.number_input(f"Makna (%)", 0, 100, 0, key=f"{key_p}n")
-        with c3: 
-            k = st.number_input(f"Ket (%)", 0, 100, 0, key=f"{key_p}k")
-        
-        # Tampilkan rata-rata per materi
-        avg_materi = (m + n + k) / 3
-        st.progress(avg_materi/100, text=f"Rata-rata {label}: {avg_materi:.1f}%")
-    return avg_materi
+    # --- Al-Quran & Al-Hadist (masing-masing 3 aspek) ---
+    col_q, col_h = st.columns(2)
+    with col_q:
+        st.markdown("**Al-Quran**")
+        q_m = st.number_input("Materi Quran (%)", 0, 100, 0, key="q_m")
+        q_n = st.number_input("Makna Quran (%)", 0, 100, 0, key="q_n")
+        q_k = st.number_input("Ket. Quran (%)", 0, 100, 0, key="q_k")
+        total_q = (q_m + q_n + q_k) / 3
+        st.caption(f"Rata-rata Quran: {total_q:.1f}%")
+    with col_h:
+        st.markdown("**Al-Hadist**")
+        h_m = st.number_input("Materi Hadist (%)", 0, 100, 0, key="h_m")
+        h_n = st.number_input("Makna Hadist (%)", 0, 100, 0, key="h_n")
+        h_k = st.number_input("Ket. Hadist (%)", 0, 100, 0, key="h_k")
+        total_h = (h_m + h_n + h_k) / 3
+        st.caption(f"Rata-rata Hadist: {total_h:.1f}%")
 
-col_q, col_h = st.columns(2)
-with col_q: 
-    total_q = input_materi_detail("Al-Quran", "q")
-with col_h: 
-    total_h = input_materi_detail("Al-Hadist", "h")
+    st.markdown("---")
+    st.markdown("**Hafalan**")
+    col_s, col_d, col_l = st.columns(3)
+    with col_s:
+        total_s = st.number_input("Hafalan Surat (%)", 0, 100, 0, key="surat")
+        st.caption(f"Target: {target['surat']}")
+    with col_d:
+        total_d = st.number_input("Hafalan Doa (%)", 0, 100, 0, key="doa")
+        st.caption(f"Target: {target['doa']}")
+    with col_l:
+        total_l = st.number_input("Hafalan Dalil (%)", 0, 100, 0, key="dalil")
+        st.caption(f"Target: {target['dalil']}")
 
-st.markdown("#### Penilaian Hafalan")
-col_s, col_d, col_l = st.columns(3)
-with col_s: 
-    total_s = st.number_input("Hafalan Surat (%)", 0, 100, 0)
-    st.caption(f"Target: {target['surat']}")
-with col_d: 
-    total_d = st.number_input("Hafalan Doa (%)", 0, 100, 0)
-    st.caption(f"Target: {target['doa']}")
-with col_l: 
-    total_l = st.number_input("Hafalan Dalil (%)", 0, 100, 0)
-    st.caption(f"Target: {target['dalil']}")
+    st.divider()
+    avg_total = (total_q + total_h + total_s + total_d + total_l) / 5
+    st.subheader(f"📊 Rata-rata Total: {avg_total:.1f}%")
+    st.progress(avg_total / 100)
 
-# Tampilkan progress total
-st.divider()
-avg_total = (total_q + total_h + total_s + total_d + total_l) / 5
-st.subheader(f"📊 Rata-rata Total: {avg_total:.1f}%")
-st.progress(avg_total/100)
+    # Tombol submit form
+    submitted = st.form_submit_button("💾 SIMPAN DATA", use_container_width=True)
 
-# --- LOGIKA SIMPAN DATA ---
-if st.button("💾 SIMPAN DATA", use_container_width=True):
-    if nama:
+# -------------------------------------------------------------------
+# 7. PROSES SIMPAN DATA (jika form disubmit)
+# -------------------------------------------------------------------
+if submitted:
+    if not nama:
+        st.warning("Silakan pilih atau isi Nama Santri terlebih dahulu!")
+    else:
         try:
-            # Buat timestamp
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
-            # Data baru
             new_data = {
                 "Timestamp": timestamp,
                 "Nama": nama,
-                "Kelompok": kelompok,
+                "Kelompok": kelompok_display,   # simpan dalam format tampilan
                 "Kelas": kls,
                 "Tahun": thn,
                 "Bulan": bln,
@@ -209,85 +280,77 @@ if st.button("💾 SIMPAN DATA", use_container_width=True):
                 "Target_Doa": target['doa'],
                 "Target_Dalil": target['dalil']
             }
-            
-            # Tambah ke session state
+
+            # Simpan ke session state
             st.session_state.rekap.append(new_data)
-            
-            # Tambah ke DataFrame CSV jika opsi dipilih
+
+            # Jika opsi CSV dipilih, simpan juga ke DataFrame khusus CSV
             if simpan_option == "CSV File":
                 new_df = pd.DataFrame([new_data])
                 if st.session_state.data_csv.empty:
                     st.session_state.data_csv = new_df
                 else:
                     st.session_state.data_csv = pd.concat([st.session_state.data_csv, new_df], ignore_index=True)
-            
-            st.success(f"Alhamdulillah! Data {nama} berhasil disimpan.")
-            st.balloons()
-            
-            # Reset form setelah simpan
-            st.rerun()
-            
-        except Exception as e:
-            st.error(f"⚠️ Error: {str(e)}")
-    else:
-        st.warning("Silakan isi Nama Lengkap terlebih dahulu!")
 
-# --- DOWNLOAD CSV ---
+            st.success(f"✅ Data {nama} berhasil disimpan!")
+            st.balloons()
+
+        except Exception as e:
+            st.error(f"⚠️ Terjadi kesalahan: {str(e)}")
+
+# -------------------------------------------------------------------
+# 8. TOMBOL DOWNLOAD CSV (jika ada data)
+# -------------------------------------------------------------------
 if not st.session_state.data_csv.empty:
     st.divider()
     st.subheader("📥 Download Data")
     csv = st.session_state.data_csv.to_csv(index=False).encode('utf-8')
-    
     st.download_button(
-        label="📄 Download Data sebagai CSV",
+        label="📄 Download CSV",
         data=csv,
         file_name=f"evaluasi_generus_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
         mime="text/csv",
         use_container_width=True
     )
 
-# --- PAPARAN REKAP ---
-st.divider()
+# -------------------------------------------------------------------
+# 9. REKAPITULASI DATA (selama sesi berlangsung)
+# -------------------------------------------------------------------
 if st.session_state.rekap:
-    st.subheader("📋 Rekapitulasi Nilai (Sesi Ini)")
+    st.divider()
+    st.subheader("📋 Rekapitulasi Sesi Ini")
     rekap_df = pd.DataFrame(st.session_state.rekap)
-    
-    # Pilih kolom untuk ditampilkan
-    display_cols = ["Timestamp", "Nama", "Kelompok", "Kelas", "Tahun", "Bulan", 
-                   "Quran", "Hadist", "Surat", "Doa", "Dalil", "Rata-rata"]
-    
-    # Filter kolom yang ada di DataFrame
-    display_cols = [col for col in display_cols if col in rekap_df.columns]
-    
-    st.dataframe(rekap_df[display_cols], use_container_width=True)
-    
-    # Tampilkan statistik sederhana
-    st.subheader("📈 Statistik Sesi Ini")
+
+    # Kolom yang ingin ditampilkan
+    tampilkan_kolom = ["Timestamp", "Nama", "Kelompok", "Kelas", "Tahun", "Bulan",
+                       "Quran", "Hadist", "Surat", "Doa", "Dalil", "Rata-rata"]
+    tampilkan_kolom = [col for col in tampilkan_kolom if col in rekap_df.columns]
+
+    st.dataframe(rekap_df[tampilkan_kolom], use_container_width=True)
+
+    # Statistik sederhana
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Jumlah Data", len(st.session_state.rekap))
+        st.metric("Jumlah Entri", len(st.session_state.rekap))
     with col2:
-        rata_rata_nilai = rekap_df['Rata-rata'].str.replace('%', '').astype(float).mean()
-        st.metric("Rata-rata Nilai", f"{rata_rata_nilai:.1f}%")
+        rata2_nilai = rekap_df['Rata-rata'].str.replace('%', '').astype(float).mean()
+        st.metric("Rata-rata Nilai", f"{rata2_nilai:.1f}%")
     with col3:
-        # Hitung jumlah unik nama
-        unique_names = rekap_df['Nama'].nunique()
-        st.metric("Jumlah Santri", unique_names)
+        unik_santri = rekap_df['Nama'].nunique()
+        st.metric("Jumlah Santri", unik_santri)
 
-# --- INSTRUKSI PENGGUNAAN ---
-with st.expander("ℹ️ Cara Menggunakan Aplikasi"):
+# -------------------------------------------------------------------
+# 10. INFORMASI PENGGUNAAN
+# -------------------------------------------------------------------
+with st.expander("ℹ️ Cara Penggunaan"):
     st.markdown("""
-    1. **Isi Data Santri** di sidebar (Nama, Kelompok, Kelas, Tahun, Bulan)
-    2. **Target pembelajaran** akan otomatis muncul berdasarkan pilihan
-    3. **Isi nilai** untuk setiap komponen (Quran, Hadist, Surat, Doa, Dalil)
-    4. **Klik 'SIMPAN DATA'** untuk menyimpan hasil evaluasi
-    5. **Pilih metode penyimpanan**:
-        - **CSV File**: Data dapat didownload sebagai file CSV
-        - **Session Only**: Data hanya tersimpan selama sesi browser terbuka
-    6. **Lihat rekapitulasi** di bagian bawah untuk data yang sudah disimpan
-    7. **Download data** sebagai CSV untuk backup atau analisis lebih lanjut
+    1. **Pilih Kelas & Kelompok** → otomatis menampilkan daftar nama santri yang tersedia.
+    2. **Pilih nama santri** dari dropdown. Jika kelompok kosong, isi manual.
+    3. **Pilih Tahun & Bulan** → target kurikulum muncul otomatis.
+    4. **Isi nilai persentase** untuk setiap komponen.
+    5. **Klik SIMPAN DATA** → data tersimpan dalam sesi dan (opsional) ke CSV.
+    6. **Download CSV** kapan saja untuk backup.
     """)
 
-# --- FOOTER ---
 st.divider()
-st.caption("© Sistem Evaluasi Kurikulum Generus - Developed with ❤️")
+st.caption("© Sistem Evaluasi Kurikulum Generus - Terintegrasi Database Santri")
