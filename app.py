@@ -124,7 +124,7 @@ SISWA_MASTER = {
         "LA2": ["HERMAN ZIDAN", "M EKA R"],
         "C1": ["FAIZ", "ZAHRA", "RINTO", "FAQIH", "RITA"],
         "C2": ["RIKO", "DINDA", "RAFI", "ADEL", "SILVI", "DANI", "AZAM"],
-        "C3": ["YULIUS", "LUSI", "DINDA", "USMAN", "JOKO", "RIZKO", "USMAN SAPUTRA"],
+        "C3": ["YULIUS", "LUSI", "DINDA", "USMAN", "JOKO", "RIZKO", "PUTRA"],
         "D1": ["VINA", "DEVI"],
         "RT7": ["NISA", "AZKA", "ANANG", "MAYA", "ARUM", "MADA", "ALEX"]
     }
